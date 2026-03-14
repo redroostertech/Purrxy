@@ -1,0 +1,44 @@
+# Environment and secrets
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# llama.cpp build artifacts (if built locally)
+llama.cpp/
+
+# Runtime data
+*.log
+*.jsonl
+
+# Cache and config (user-specific)
+.config/
+
+# Test artifacts
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
