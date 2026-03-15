@@ -1,13 +1,13 @@
 #!/bin/bash
 # =============================================================================
-# Start lana-proxy services
+# Start purrxy services
 #
 # Thin wrapper around the Python process supervisor.
 #
 # Usage:
 #   ./start.sh              Start backend + proxy (default)
 #   ./start.sh --backend    Start only the llama.cpp backend
-#   ./start.sh --proxy      Start only the lana-proxy server
+#   ./start.sh --proxy      Start only the purrxy server
 # =============================================================================
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -23,13 +23,13 @@ for arg in "$@"; do
             echo ""
             echo "  No flags     Start backend + proxy (default)"
             echo "  --backend    Start only the llama.cpp backend"
-            echo "  --proxy      Start only the lana-proxy server"
+            echo "  --proxy      Start only the purrxy server"
             echo ""
-            echo "Delegates to: python3 lana-proxy.py --start"
+            echo "Delegates to: python3 purrxy.py --start"
             exit 0
             ;;
         *) ARGS="$ARGS $arg" ;;
     esac
 done
 
-exec python3 "$SCRIPT_DIR/lana-proxy.py" $ARGS
+exec python3 "$SCRIPT_DIR/purrxy.py" $ARGS

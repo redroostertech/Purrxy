@@ -5,7 +5,7 @@ Manages multiple child processes with health checks, auto-restart,
 exponential backoff, log streaming, and clean shutdown. Pure Python
 stdlib — works on macOS, Linux, and Windows.
 
-Reusable in any Python project. Knows nothing about lana-proxy,
+Reusable in any Python project. Knows nothing about Purrxy,
 llama.cpp, or any specific application.
 
 Architecture

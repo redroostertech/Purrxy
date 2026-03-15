@@ -27,13 +27,13 @@ class TestFromEnv(unittest.TestCase):
     """Test Config.from_env() reads environment variables."""
 
     def test_from_env(self):
-        """Config.from_env() reads LANA_PROXY_PORT, LANA_PROXY_HOST, etc."""
+        """Config.from_env() reads PURRXY_PORT, PURRXY_HOST, etc."""
         env = {
-            "LANA_PROXY_PORT": "9999",
-            "LANA_PROXY_HOST": "0.0.0.0",
-            "LANA_PROXY_BACKEND": "http://localhost:1234",
-            "LANA_PROXY_LOG_LEVEL": "DEBUG",
-            "LANA_PROXY_TIMEOUT": "60",
+            "PURRXY_PORT": "9999",
+            "PURRXY_HOST": "0.0.0.0",
+            "PURRXY_BACKEND": "http://localhost:1234",
+            "PURRXY_LOG_LEVEL": "DEBUG",
+            "PURRXY_TIMEOUT": "60",
         }
         with patch.dict(os.environ, env, clear=False):
             cfg = Config.from_env()
@@ -45,11 +45,11 @@ class TestFromEnv(unittest.TestCase):
 
     def test_from_env_defaults(self):
         """Config.from_env() uses defaults when env vars are absent."""
-        # Clear any LANA_PROXY_* vars that might be set
-        env_keys = [k for k in os.environ if k.startswith("LANA_PROXY_")]
+        # Clear any PURRXY_* vars that might be set
+        env_keys = [k for k in os.environ if k.startswith("PURRXY_")]
         removals = {k: "" for k in env_keys}
         with patch.dict(os.environ, {}, clear=False):
-            # Remove any LANA_PROXY_ keys
+            # Remove any PURRXY_ keys
             for k in env_keys:
                 os.environ.pop(k, None)
             cfg = Config.from_env()

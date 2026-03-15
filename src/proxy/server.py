@@ -1,5 +1,5 @@
 """
-HTTP server and request handler for lana-proxy.
+HTTP server and request handler for purrxy.
 
 Routes incoming Anthropic Messages API requests to the appropriate translator,
 forwards to the llama.cpp backend, and returns translated responses.

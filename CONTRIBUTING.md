@@ -1,6 +1,6 @@
-# Contributing to lana-proxy
+# Contributing to Purrxy
 
-Thanks for your interest in contributing to lana-proxy!
+Thanks for your interest in contributing to purrxy!
 
 ## Getting Started
 
@@ -14,12 +14,12 @@ python3 -m unittest discover tests/ -v
 
 ## Development
 
-lana-proxy has **zero external dependencies** — it uses only the Python 3.9+ standard library. Please keep it that way. If you think a third-party dependency is truly necessary, open an issue to discuss it first.
+purrxy has **zero external dependencies** — it uses only the Python 3.9+ standard library. Please keep it that way. If you think a third-party dependency is truly necessary, open an issue to discuss it first.
 
 ### Project Structure
 
 ```
-lana-proxy.py              Entry point
+purrxy.py              Entry point
 src/
   process/                 Generic process management (reusable, zero deps)
   backend/                 llama.cpp-specific configuration

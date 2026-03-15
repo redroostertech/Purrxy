@@ -1,5 +1,5 @@
 [project]
-name = "lana-proxy"
+name = "purrxy"
 version = "1.0.0"
 description = "Anthropic Messages API to OpenAI Chat Completions translation proxy"
 readme = "README.md"

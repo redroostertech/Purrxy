@@ -1,5 +1,5 @@
 """
-Conversation analytics for lana-proxy.
+Conversation analytics for purrxy.
 
 Logs structured summaries after each request/response cycle to a JSONL file.
 Provides session-level aggregation accessible via the /admin/analytics endpoint.

@@ -1,7 +1,7 @@
 """
 llama.cpp backend configuration and discovery.
 
-This module is the lana-proxy-specific glue between the generic supervisor
+This module is the Purrxy-specific glue between the generic supervisor
 and the llama.cpp backend. It handles:
 
     1. Finding the llama-server binary across known build locations.
@@ -13,7 +13,7 @@ Architecture
 
     This is the ONLY module that knows about llama.cpp specifics. The
     supervisor module is generic and reusable — it just runs commands.
-    This module translates lana-proxy's .env config into a concrete
+    This module translates purrxy's .env config into a concrete
     command that the supervisor can execute.
 
     .env (via proxy/env.py)  -->  BackendConfig  -->  build_backend_command()  -->  List[str] argv

@@ -1,6 +1,10 @@
-# lana-proxy
+<p align="center">
+  <img src="logo.gif" alt="Purrxy" width="300">
+</p>
 
-Lightweight API translation proxy that enables Anthropic Messages API clients to communicate with llama.cpp and other OpenAI-compatible backends. Part of the **LANA** suite (Locally Autonomous Neural Agent).
+<h1 align="center">Purrxy</h1>
+
+<p align="center">Lightweight API translation proxy that enables Anthropic Messages API clients to communicate with llama.cpp and other OpenAI-compatible backends.</p>
 
 **Zero dependencies** — pure Python 3.9+ stdlib only.
 
@@ -33,7 +37,7 @@ LANA_USE_PROXY=true lana-code
 ```
 ┌──────────────┐     Anthropic API     ┌─────────────┐     OpenAI API      ┌──────────────┐
 │              │ ──────────────────────>│             │ ──────────────────> │              │
-│  API Client  │   POST /v1/messages   │ lana-proxy  │ /v1/chat/completions│  llama.cpp   │
+│  API Client  │   POST /v1/messages   │  Purrxy     │ /v1/chat/completions│  llama.cpp   │
 │              │ <──────────────────── │  :5304      │ <────────────────── │  :8080       │
 └──────────────┘   Anthropic format    └─────────────┘    OpenAI format    └──────────────┘
 ```
@@ -52,8 +56,8 @@ The install script is idempotent and handles:
 1. **Prerequisites check** — git, cmake, curl, python3 3.9+
 2. **llama.cpp** — clones and builds with Metal GPU support (Apple Silicon)
 3. **Model download** — fetches the model specified in `.env` (default: Qwen2.5-Coder-14B-Instruct Q5_K_M)
-4. **Symlinks** — creates `~/bin/lana-proxy` for PATH access
-5. **Config directories** — sets up `~/.config/lana-proxy/` for analytics, cache, recordings
+4. **Symlinks** — creates `~/bin/purrxy` for PATH access
+5. **Config directories** — sets up `~/.config/purrxy/` for analytics, cache, recordings
 
 ## Configuration
 
@@ -76,7 +80,7 @@ Key settings:
 | `PARALLEL_SLOTS` | `1` | Concurrent inference slots |
 | `GPU_LAYERS` | `99` | Layers offloaded to Metal GPU |
 | `BACKEND_PORT` | `8080` | llama.cpp server port |
-| `PROXY_PORT` | `5304` | lana-proxy listen port |
+| `PROXY_PORT` | `5304` | purrxy listen port |
 
 ### CLI Flags
 
@@ -86,11 +90,11 @@ Settings resolve in order: **CLI args > environment variables > defaults**.
 
 | Flag | Env Var | Default | Description |
 |---|---|---|---|
-| `--host` | `LANA_PROXY_HOST` | `127.0.0.1` | Bind address |
-| `--port` | `LANA_PROXY_PORT` | `5304` | Listen port |
-| `--backend` | `LANA_PROXY_BACKEND` | `http://127.0.0.1:8080` | Backend URL |
-| `--log-level` | `LANA_PROXY_LOG_LEVEL` | `INFO` | DEBUG/INFO/WARNING/ERROR |
-| `--timeout` | `LANA_PROXY_TIMEOUT` | `300` | Backend timeout (seconds) |
+| `--host` | `PURRXY_HOST` | `127.0.0.1` | Bind address |
+| `--port` | `PURRXY_PORT` | `5304` | Listen port |
+| `--backend` | `PURRXY_BACKEND` | `http://127.0.0.1:8080` | Backend URL |
+| `--log-level` | `PURRXY_LOG_LEVEL` | `INFO` | DEBUG/INFO/WARNING/ERROR |
+| `--timeout` | `PURRXY_TIMEOUT` | `300` | Backend timeout (seconds) |
 | `--default-model` | — | `local-model` | Fallback model name |
 | `--model-map` | — | — | Name mappings (e.g., `claude-3-opus=qwen2.5-coder`) |
 
@@ -145,7 +149,7 @@ Full Anthropic Messages API translation:
 Route different models to different llama.cpp instances:
 
 ```bash
-python3 lana-proxy.py \
+python3 purrxy.py \
   --route claude-3-opus=http://localhost:8080 \
   --route claude-3-haiku=http://localhost:8081
 ```
@@ -155,7 +159,7 @@ python3 lana-proxy.py \
 llama.cpp has limited concurrency. The proxy queues excess requests:
 
 ```bash
-python3 lana-proxy.py --max-concurrent 2 --queue-timeout 120
+python3 purrxy.py --max-concurrent 2 --queue-timeout 120
 ```
 
 ### Prompt Caching
@@ -163,7 +167,7 @@ python3 lana-proxy.py --max-concurrent 2 --queue-timeout 120
 Cache identical non-streaming requests to save GPU cycles during development:
 
 ```bash
-python3 lana-proxy.py --cache --cache-ttl 600 --cache-max-size 200
+python3 purrxy.py --cache --cache-ttl 600 --cache-max-size 200
 ```
 
 ### Request/Response Recording & Replay
@@ -172,10 +176,10 @@ Record full conversations for debugging or offline testing:
 
 ```bash
 # Record
-python3 lana-proxy.py --record ./sessions/debug.jsonl
+python3 purrxy.py --record ./sessions/debug.jsonl
 
 # Replay without a backend
-python3 lana-proxy.py --replay ./sessions/debug.jsonl
+python3 purrxy.py --replay ./sessions/debug.jsonl
 ```
 
 ### Live Dashboard
@@ -183,7 +187,7 @@ python3 lana-proxy.py --replay ./sessions/debug.jsonl
 Real-time terminal UI showing requests, latency, throughput, and backend status:
 
 ```bash
-python3 lana-proxy.py --dashboard
+python3 purrxy.py --dashboard
 ```
 
 ### Token Budget
@@ -191,7 +195,7 @@ python3 lana-proxy.py --dashboard
 Limit total token consumption per session:
 
 ```bash
-python3 lana-proxy.py --token-budget 100000
+python3 purrxy.py --token-budget 100000
 ```
 
 ### Conversation Analytics
@@ -199,7 +203,7 @@ python3 lana-proxy.py --token-budget 100000
 Structured JSONL logs for every request — tokens, latency, tool usage, cache hits:
 
 ```bash
-python3 lana-proxy.py --analytics ./logs/analytics.jsonl
+python3 purrxy.py --analytics ./logs/analytics.jsonl
 ```
 
 ### Auto Model Discovery
@@ -273,7 +277,7 @@ message_start
 ## Architecture
 
 ```
-lana-proxy.py                          Entry point
+purrxy.py                          Entry point
 
 src/
   process/                             Generic process management (reusable)
@@ -316,23 +320,23 @@ Built-in cross-platform process management (macOS, Linux, Windows):
 
 ```bash
 # Start full stack (backend + proxy) with auto-restart
-lana-proxy --start
+purrxy --start
 
 # Start components individually
-lana-proxy --start --backend-only
-lana-proxy --start --proxy-only
+purrxy --start --backend-only
+purrxy --start --proxy-only
 
 # Check status
-lana-proxy --status
+purrxy --status
 
 # Tail logs (like pm2 logs)
-lana-proxy --logs
+purrxy --logs
 
 # Restart all
-lana-proxy --restart
+purrxy --restart
 
 # Stop all
-lana-proxy --stop
+purrxy --stop
 ```
 
 Features:
@@ -348,8 +352,8 @@ Features:
 | Script | Description |
 |---|---|
 | `install.sh` | Full setup: llama.cpp, model, symlinks, config |
-| `start.sh` | Wrapper for `lana-proxy --start`. Use `--backend` or `--proxy` for individual |
-| `stop.sh` | Wrapper for `lana-proxy --stop` |
+| `start.sh` | Wrapper for `purrxy --start`. Use `--backend` or `--proxy` for individual |
+| `stop.sh` | Wrapper for `purrxy --stop` |
 
 ## Testing
 
@@ -400,4 +404,4 @@ curl http://127.0.0.1:5304/health
 
 ## License
 
-Part of the LANA suite. [MIT License](LICENSE). Copyright (c) 2025 RedRooster Technologies Inc.
+[MIT License](LICENSE). Copyright (c) 2026 RedRooster Technologies Inc.

@@ -1,10 +1,10 @@
-# Connecting Claude Code to lana-proxy
+# Connecting Claude Code to purrxy
 
-Run Claude Code against your local llama.cpp backend through lana-proxy.
+Run Claude Code against your local llama.cpp backend through purrxy.
 
 ## Prerequisites
 
-1. lana-proxy installed (`bash install.sh`)
+1. purrxy installed (`bash install.sh`)
 2. Backend + proxy running (`./start.sh`)
 3. Claude Code installed (`npm install -g @anthropic-ai/claude-code` or however you installed it)
 
@@ -21,7 +21,7 @@ curl http://127.0.0.1:5304/health
 ANTHROPIC_BASE_URL=http://127.0.0.1:5304 claude
 ```
 
-That's it. Claude Code sends requests to lana-proxy, which translates them and forwards to your local llama.cpp.
+That's it. Claude Code sends requests to purrxy, which translates them and forwards to your local llama.cpp.
 
 ## Make It Permanent
 
@@ -40,7 +40,7 @@ claude
 
 ## API Key
 
-Claude Code expects an API key. lana-proxy ignores authentication entirely, but Claude Code may still require the variable to be set. If you get an auth error:
+Claude Code expects an API key. purrxy ignores authentication entirely, but Claude Code may still require the variable to be set. If you get an auth error:
 
 ```bash
 export ANTHROPIC_API_KEY=not-needed
@@ -67,7 +67,7 @@ Then:
 
 ```bash
 claude           # Uses Anthropic cloud (if ANTHROPIC_BASE_URL is not set globally)
-claude-local     # Uses local llama.cpp via lana-proxy
+claude-local     # Uses local llama.cpp via purrxy
 ```
 
 ### Option B: Shell Function
@@ -91,7 +91,7 @@ toggle-claude() {
     if [ -z "$ANTHROPIC_BASE_URL" ]; then
         export ANTHROPIC_BASE_URL=http://127.0.0.1:5304
         export ANTHROPIC_API_KEY=not-needed
-        echo "Claude Code → LOCAL (lana-proxy)"
+        echo "Claude Code → LOCAL (purrxy)"
     else
         unset ANTHROPIC_BASE_URL
         unset ANTHROPIC_API_KEY
@@ -102,12 +102,12 @@ toggle-claude() {
 
 ## Model Names
 
-Claude Code sends model names like `claude-sonnet-4-20250514`. lana-proxy forwards these to the backend as-is by default — llama.cpp ignores the model name field and uses whatever model it has loaded.
+Claude Code sends model names like `claude-sonnet-4-20250514`. purrxy forwards these to the backend as-is by default — llama.cpp ignores the model name field and uses whatever model it has loaded.
 
 If you want explicit model mapping:
 
 ```bash
-lana-proxy --model-map claude-sonnet-4-20250514=qwen2.5-coder
+purrxy --model-map claude-sonnet-4-20250514=qwen2.5-coder
 ```
 
 This is cosmetic — it renames the model in the request before forwarding. The backend still uses its loaded model regardless.
@@ -137,7 +137,7 @@ Claude Code works fine at these speeds — it just takes longer per response. Th
 ### Tips for Better Performance
 
 - **Keep context small.** Use `/clear` between unrelated tasks to avoid accumulating large conversation history.
-- **Use caching.** If you're iterating on the same prompt: `lana-proxy --cache --cache-ttl 600`
+- **Use caching.** If you're iterating on the same prompt: `purrxy --cache --cache-ttl 600`
 - **Increase context carefully.** Going from 8K to 16K doubles RAM pressure. See the [install guide](INSTALL.md#context-size-guidelines) for recommendations.
 
 ## Troubleshooting
@@ -160,7 +160,7 @@ curl http://127.0.0.1:8080/health    # Backend
 The backend is still loading the model. Large models take 10–60 seconds. Check:
 
 ```bash
-cat ~/.config/lana-proxy/backend.log
+cat ~/.config/purrxy/backend.log
 ```
 
 Wait for the model to finish loading, then retry.
@@ -171,7 +171,7 @@ The backend is busy with another request. The proxy queues requests by default (
 
 Options:
 - Wait and retry
-- Increase queue timeout: `lana-proxy --queue-timeout 300`
+- Increase queue timeout: `purrxy --queue-timeout 300`
 - Run backend with parallel slots: set `PARALLEL_SLOTS=2` in `.env` (uses more RAM)
 
 ### Garbled or incomplete tool use
