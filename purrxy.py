@@ -1,27 +1,26 @@
 #!/usr/bin/env python3
 """
-lana-proxy: Anthropic Messages API -> OpenAI Chat Completions translator.
+purrxy: Anthropic Messages API -> OpenAI Chat Completions translator.
 
-Part of the LANA suite (Locally Autonomous Neural Agent).
 Translates Anthropic Messages API requests into OpenAI-compatible format
 and forwards them to a local llama.cpp server.
 
 Usage:
-    python3 lana-proxy.py [OPTIONS]
-    python3 lana-proxy.py --start [--backend-only | --proxy-only]
-    python3 lana-proxy.py --stop
-    python3 lana-proxy.py --status
+    python3 purrxy.py [OPTIONS]
+    python3 purrxy.py --start [--backend-only | --proxy-only]
+    python3 purrxy.py --stop
+    python3 purrxy.py --status
 
 Examples:
     # Run proxy directly (foreground)
-    python3 lana-proxy.py --port 5304 --backend http://127.0.0.1:8080
+    python3 purrxy.py --port 5304 --backend http://127.0.0.1:8080
 
     # Manage full stack via supervisor
-    python3 lana-proxy.py --start                    # Start backend + proxy
-    python3 lana-proxy.py --start --backend-only     # Start only llama.cpp
-    python3 lana-proxy.py --start --proxy-only       # Start only the proxy
-    python3 lana-proxy.py --stop                     # Stop all
-    python3 lana-proxy.py --status                   # Show process status
+    python3 purrxy.py --start                    # Start backend + proxy
+    python3 purrxy.py --start --backend-only     # Start only llama.cpp
+    python3 purrxy.py --start --proxy-only       # Start only the proxy
+    python3 purrxy.py --stop                     # Stop all
+    python3 purrxy.py --status                   # Show process status
 """
 
 import argparse
@@ -44,7 +43,7 @@ from src.proxy.monitoring.stats import Stats
 def parse_args() -> argparse.Namespace:
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(
-        prog="lana-proxy",
+        prog="Purrxy",
         description="Anthropic Messages API to OpenAI Chat Completions proxy",
     )
 
@@ -314,7 +313,7 @@ def _get_supervisor_context(args: argparse.Namespace):
     from src.process import ProcessConfig, Supervisor, load_dotenv_into_environ
 
     project_dir = os.path.dirname(os.path.realpath(__file__))
-    config_dir = os.path.join(os.path.expanduser("~"), ".config", "lana-proxy")
+    config_dir = os.path.join(os.path.expanduser("~"), ".config", "Purrxy")
 
     env_path = os.path.join(project_dir, ".env")
     if os.path.exists(env_path):
@@ -338,7 +337,7 @@ def _get_supervisor_context(args: argparse.Namespace):
     if start_proxy:
         proxy_cmd = [
             sys.executable,
-            os.path.join(project_dir, "lana-proxy.py"),
+            os.path.join(project_dir, "purrxy.py"),
         ] + _build_proxy_forward_args(args)
 
         if start_backend:
@@ -400,7 +399,7 @@ def _kill_stale_port(port: int) -> None:
     if not pids:
         return
 
-    logger = logging.getLogger("lana-proxy")
+    logger = logging.getLogger("Purrxy")
 
     # SIGTERM first
     for pid in pids:
@@ -439,13 +438,13 @@ def _kill_stale_port(port: int) -> None:
 def _daemonize_start(args: argparse.Namespace) -> None:
     """Spawn the supervisor as a background daemon process.
 
-    Re-execs lana-proxy.py with --_daemon flag in a fully detached subprocess.
+    Re-execs purrxy.py with --_daemon flag in a fully detached subprocess.
     The parent process prints status and returns to the shell immediately.
     """
     import subprocess as _sp
 
     project_dir = os.path.dirname(os.path.realpath(__file__))
-    config_dir = os.path.join(os.path.expanduser("~"), ".config", "lana-proxy")
+    config_dir = os.path.join(os.path.expanduser("~"), ".config", "Purrxy")
     os.makedirs(config_dir, exist_ok=True)
 
     # Kill stale processes on configured ports before starting
@@ -460,7 +459,7 @@ def _daemonize_start(args: argparse.Namespace) -> None:
         _kill_stale_port(backend_port)
 
     # Build the daemon command: same args but with --_daemon instead of --start
-    daemon_cmd = [sys.executable, os.path.join(project_dir, "lana-proxy.py"), "--_daemon"]
+    daemon_cmd = [sys.executable, os.path.join(project_dir, "purrxy.py"), "--_daemon"]
     if args.backend_only:
         daemon_cmd.append("--backend-only")
     if args.proxy_only:
@@ -488,7 +487,7 @@ def _daemonize_start(args: argparse.Namespace) -> None:
     sv, *_ = _get_supervisor_context(args)
     expect_count = (1 if args.backend_only or args.proxy_only else 2) + 1  # +1 for supervisor
 
-    print("lana-proxy starting...", end="", flush=True)
+    print("purrxy starting...", end="", flush=True)
     deadline = _time.monotonic() + 30
     while _time.monotonic() < deadline:
         _time.sleep(1)
@@ -502,8 +501,8 @@ def _daemonize_start(args: argparse.Namespace) -> None:
     print()
     _print_status(sv)
     print()
-    print(f"  Logs: lana-proxy --logs")
-    print(f"  Stop: lana-proxy --stop")
+    print(f"  Logs: purrxy --logs")
+    print(f"  Stop: purrxy --stop")
 
 
 def _tail_logs(config_dir: str) -> None:
@@ -532,7 +531,7 @@ def _tail_logs(config_dir: str) -> None:
 
 def _run_supervisor(args: argparse.Namespace) -> None:
     """Handle --start, --stop, --status, --logs, and --restart commands."""
-    config_dir = os.path.join(os.path.expanduser("~"), ".config", "lana-proxy")
+    config_dir = os.path.join(os.path.expanduser("~"), ".config", "Purrxy")
 
     # --logs: tail log files
     if args.logs:
@@ -652,7 +651,7 @@ def main():
     signal.signal(signal.SIGINT, request_stop)
     signal.signal(signal.SIGTERM, request_stop)
 
-    logger.info("lana-proxy starting on %s:%d", config.host, config.port)
+    logger.info("purrxy starting on %s:%d", config.host, config.port)
     logger.info("Backend: %s", config.backend_url)
     logger.info("Default model: %s", config.default_model)
     if config.model_map:

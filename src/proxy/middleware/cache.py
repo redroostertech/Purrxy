@@ -1,5 +1,5 @@
 """
-Prompt caching layer for lana-proxy.
+Prompt caching layer for purrxy.
 
 Provides an in-memory LRU cache for identical non-streaming requests.
 Cache key is a SHA-256 hash of (model + system + messages + tools).

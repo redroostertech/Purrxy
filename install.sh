@@ -1,8 +1,8 @@
 #!/bin/bash
 # =============================================================================
-# lana-proxy Install Script
+# purrxy Install Script
 # =============================================================================
-# Installs llama.cpp, downloads a model, and sets up lana-proxy.
+# Installs llama.cpp, downloads a model, and sets up purrxy.
 # Safe to run multiple times (idempotent).
 #
 # Requirements: git, cmake, curl, python3 (3.9+)
@@ -12,7 +12,7 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-CONFIG_DIR="$HOME/.config/lana-proxy"
+CONFIG_DIR="$HOME/.config/purrxy"
 BIN_DIR="$HOME/bin"
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
@@ -252,9 +252,9 @@ fi
 
 echo ""
 
-# ── Setup lana-proxy ─────────────────────────────────────────────────────────
+# ── Setup purrxy ─────────────────────────────────────────────────────────
 
-log_info "Setting up lana-proxy..."
+log_info "Setting up purrxy..."
 
 # Create config directory
 if [ ! -d "$CONFIG_DIR" ]; then
@@ -275,7 +275,7 @@ for subdir in analytics cache recordings; do
 done
 
 # Make main script executable
-chmod +x "$SCRIPT_DIR/lana-proxy.py"
+chmod +x "$SCRIPT_DIR/purrxy.py"
 
 # Create bin directory if needed
 if [ ! -d "$BIN_DIR" ]; then
@@ -283,20 +283,20 @@ if [ ! -d "$BIN_DIR" ]; then
     log_ok "Created $BIN_DIR"
 fi
 
-# Symlink to ~/bin/lana-proxy
-if [ -L "$BIN_DIR/lana-proxy" ]; then
-    EXISTING_TARGET="$(readlink "$BIN_DIR/lana-proxy")"
-    if [ "$EXISTING_TARGET" = "$SCRIPT_DIR/lana-proxy.py" ]; then
-        log_skip "Symlink already exists: $BIN_DIR/lana-proxy -> $SCRIPT_DIR/lana-proxy.py"
+# Symlink to ~/bin/purrxy
+if [ -L "$BIN_DIR/purrxy" ]; then
+    EXISTING_TARGET="$(readlink "$BIN_DIR/purrxy")"
+    if [ "$EXISTING_TARGET" = "$SCRIPT_DIR/purrxy.py" ]; then
+        log_skip "Symlink already exists: $BIN_DIR/purrxy -> $SCRIPT_DIR/purrxy.py"
     else
-        ln -sf "$SCRIPT_DIR/lana-proxy.py" "$BIN_DIR/lana-proxy"
-        log_ok "Updated symlink: $BIN_DIR/lana-proxy -> $SCRIPT_DIR/lana-proxy.py"
+        ln -sf "$SCRIPT_DIR/purrxy.py" "$BIN_DIR/purrxy"
+        log_ok "Updated symlink: $BIN_DIR/purrxy -> $SCRIPT_DIR/purrxy.py"
     fi
-elif [ -e "$BIN_DIR/lana-proxy" ]; then
-    log_skip "$BIN_DIR/lana-proxy exists but is not a symlink — not overwriting"
+elif [ -e "$BIN_DIR/purrxy" ]; then
+    log_skip "$BIN_DIR/purrxy exists but is not a symlink — not overwriting"
 else
-    ln -s "$SCRIPT_DIR/lana-proxy.py" "$BIN_DIR/lana-proxy"
-    log_ok "Created symlink: $BIN_DIR/lana-proxy -> $SCRIPT_DIR/lana-proxy.py"
+    ln -s "$SCRIPT_DIR/purrxy.py" "$BIN_DIR/purrxy"
+    log_ok "Created symlink: $BIN_DIR/purrxy -> $SCRIPT_DIR/purrxy.py"
 fi
 
 echo ""
@@ -313,7 +313,7 @@ done
 # ── Summary ──────────────────────────────────────────────────────────────────
 
 echo "============================================================================="
-echo " lana-proxy installation complete!"
+echo " Purrxy installation complete!"
 echo "============================================================================="
 echo ""
 echo " Quick start:"
@@ -324,7 +324,7 @@ echo ""
 echo " Configuration:  $SCRIPT_DIR/.env"
 echo " Config dir:     $CONFIG_DIR"
 echo " Model:          $MODEL_PATH"
-echo " Proxy command:  lana-proxy (in ~/bin/)"
+echo " Proxy command:  purrxy (in ~/bin/)"
 echo ""
 echo " Test the proxy:"
 echo "   curl http://127.0.0.1:$PROXY_PORT/health"

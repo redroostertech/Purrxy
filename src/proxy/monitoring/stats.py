@@ -1,5 +1,5 @@
 """
-Thread-safe statistics tracking for lana-proxy.
+Thread-safe statistics tracking for purrxy.
 
 Collects request counts, latencies, token throughput, active connections,
 and recent request summaries for the dashboard and admin endpoints.

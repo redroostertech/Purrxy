@@ -38,7 +38,7 @@ class TestStopSignals(unittest.TestCase):
     def _run_and_signal(self, signum: int) -> None:
         port = _free_port()
         proc = subprocess.Popen(
-            [sys.executable, os.path.join(ROOT, "lana-proxy.py"),
+            [sys.executable, os.path.join(ROOT, "purrxy.py"),
              "--port", str(port), "--backend", f"http://127.0.0.1:{_free_port()}"],
             cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
         )

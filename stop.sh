@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================================
-# Stop lana-proxy services
+# Stop purrxy services
 #
 # Thin wrapper around the Python process supervisor.
 #
@@ -10,4 +10,4 @@
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-exec python3 "$SCRIPT_DIR/lana-proxy.py" --stop
+exec python3 "$SCRIPT_DIR/purrxy.py" --stop

@@ -24,8 +24,8 @@ No Homebrew, Node.js, or pip packages required.
 ## Quick Install
 
 ```bash
-git clone <repo-url> ~/Desktop/lana-proxy
-cd ~/Desktop/lana-proxy
+git clone <repo-url> ~/Desktop/purrxy
+cd ~/Desktop/purrxy
 bash install.sh
 source ~/.zshrc
 ```
@@ -56,11 +56,11 @@ Verifies git, cmake, curl, and Python 3.9+ are available.
 
 This was chosen for the best balance of quality and speed on 24GB Apple Silicon machines with 8K context.
 
-### 4. lana-proxy Setup
+### 4. purrxy Setup
 
 - Creates `.env` from `.env.example` if missing
-- Symlinks `lana-proxy.py` to `~/bin/lana-proxy`
-- Creates `~/.config/lana-proxy/` with subdirectories for:
+- Symlinks `purrxy.py` to `~/bin/purrxy`
+- Creates `~/.config/purrxy/` with subdirectories for:
   - `analytics/` — Analytics logs
   - `cache/` — Disk cache
   - `recordings/` — Request/response recordings
@@ -77,7 +77,7 @@ Makes `start.sh` and `stop.sh` executable. These are thin wrappers around the bu
 
 ## Configuration (.env)
 
-After install, customize `~/Desktop/lana-proxy/.env`:
+After install, customize `~/Desktop/purrxy/.env`:
 
 ```bash
 # Model
@@ -113,8 +113,8 @@ The default (8192) is conservative and works reliably on 24 GB machines.
 ## Directory Layout After Install
 
 ```
-~/Desktop/lana-proxy/               Project root
-  lana-proxy.py                     Entry point
+~/Desktop/purrxy/               Project root
+  purrxy.py                     Entry point
   .env                              Your configuration
   install.sh                        Installer
   start.sh                          Start wrapper (delegates to supervisor)
@@ -139,7 +139,7 @@ The default (8192) is conservative and works reliably on 24 GB machines.
   models/
     Qwen2.5-Coder-14B-*.gguf       Default model
 
-~/.config/lana-proxy/               Runtime data
+~/.config/purrxy/               Runtime data
   analytics/
   cache/
   recordings/
@@ -150,7 +150,7 @@ The default (8192) is conservative and works reliably on 24 GB machines.
   proxy.log
 
 ~/bin/
-  lana-proxy -> ~/Desktop/lana-proxy/lana-proxy.py
+  purrxy -> ~/Desktop/purrxy/purrxy.py
 ```
 
 ## Starting the Stack
@@ -158,45 +158,45 @@ The default (8192) is conservative and works reliably on 24 GB machines.
 ### Option A: Supervisor (Recommended)
 
 ```bash
-lana-proxy --start
+purrxy --start
 ```
 
 This:
 1. Kills any stale processes on the configured ports
 2. Starts the llama.cpp backend
 3. Waits for the backend to pass health checks
-4. Starts lana-proxy
+4. Starts purrxy
 5. Monitors both processes with auto-restart on crash
 
 ### Option B: Components Separately
 
 ```bash
-lana-proxy --start --backend-only
-lana-proxy --start --proxy-only
+purrxy --start --backend-only
+purrxy --start --proxy-only
 ```
 
 ### Option C: Shell Script Wrappers
 
 ```bash
-./start.sh               # Same as lana-proxy --start
-./start.sh --backend     # Same as lana-proxy --start --backend-only
-./start.sh --proxy       # Same as lana-proxy --start --proxy-only
+./start.sh               # Same as purrxy --start
+./start.sh --backend     # Same as purrxy --start --backend-only
+./start.sh --proxy       # Same as purrxy --start --proxy-only
 ```
 
 ### Option D: Foreground with Dashboard
 
 ```bash
 # Start backend via supervisor
-lana-proxy --start --backend-only
+purrxy --start --backend-only
 
 # Run proxy in foreground with live dashboard
-lana-proxy --dashboard --log-level DEBUG
+purrxy --dashboard --log-level DEBUG
 ```
 
 ## Process Status
 
 ```bash
-lana-proxy --status
+purrxy --status
 ```
 
 Output:
@@ -209,7 +209,7 @@ Output:
 ## Logs
 
 ```bash
-lana-proxy --logs
+purrxy --logs
 ```
 
 Tails all log files (supervisor, backend, proxy). Press Ctrl+C to stop.
@@ -218,7 +218,7 @@ Tails all log files (supervisor, backend, proxy). Press Ctrl+C to stop.
 
 ```bash
 # Stop everything
-lana-proxy --stop
+purrxy --stop
 
 # Or via script wrapper
 ./stop.sh
@@ -272,7 +272,7 @@ client = anthropic.Anthropic(
 ## Updating
 
 ```bash
-cd ~/Desktop/lana-proxy
+cd ~/Desktop/purrxy
 git pull
 # No build step — pure Python
 ```
@@ -289,16 +289,16 @@ cmake --build build --config Release -j$(sysctl -n hw.ncpu)
 
 ```bash
 # Stop services
-lana-proxy --stop
+purrxy --stop
 
 # Remove symlink
-rm ~/bin/lana-proxy
+rm ~/bin/purrxy
 
 # Remove source
-rm -rf ~/Desktop/lana-proxy
+rm -rf ~/Desktop/purrxy
 
 # Remove runtime data
-rm -rf ~/.config/lana-proxy
+rm -rf ~/.config/purrxy
 
 # Remove llama.cpp and models (optional — shared with lana-code)
 rm -rf ~/llama.cpp ~/models
@@ -315,10 +315,10 @@ The llama.cpp server isn't running or hasn't finished loading:
 curl http://127.0.0.1:8080/health
 
 # Check logs
-cat ~/.config/lana-proxy/backend.log
+cat ~/.config/purrxy/backend.log
 
 # Restart
-lana-proxy --restart
+purrxy --restart
 ```
 
 ### Model takes too long to load

@@ -4,7 +4,7 @@
 
 ```bash
 # Start with defaults
-lana-proxy
+purrxy
 
 # Or with full stack
 ./start.sh
@@ -17,7 +17,7 @@ The proxy listens on `http://127.0.0.1:5304` and forwards to `http://127.0.0.1:8
 ### Standard Mode
 
 ```bash
-lana-proxy
+purrxy
 ```
 
 Runs in foreground, logs to stderr. Press Ctrl+C to stop.
@@ -25,7 +25,7 @@ Runs in foreground, logs to stderr. Press Ctrl+C to stop.
 ### Dashboard Mode
 
 ```bash
-lana-proxy --dashboard
+purrxy --dashboard
 ```
 
 Shows a live-updating terminal UI with:
@@ -38,7 +38,7 @@ Shows a live-updating terminal UI with:
 ### Debug Mode
 
 ```bash
-lana-proxy --log-level DEBUG
+purrxy --log-level DEBUG
 ```
 
 Logs full request/response bodies, SSE chunks, and translation details.
@@ -46,12 +46,12 @@ Logs full request/response bodies, SSE chunks, and translation details.
 ### Supervised Mode
 
 ```bash
-lana-proxy --start              # Start backend + proxy with auto-restart
-lana-proxy --start --proxy-only # Proxy only (backend managed externally)
-lana-proxy --status             # Check process status
-lana-proxy --logs               # Tail log output (like pm2 logs)
-lana-proxy --restart            # Stop then start all processes
-lana-proxy --stop               # Stop all
+purrxy --start              # Start backend + proxy with auto-restart
+purrxy --start --proxy-only # Proxy only (backend managed externally)
+purrxy --status             # Check process status
+purrxy --logs               # Tail log output (like pm2 logs)
+purrxy --restart            # Stop then start all processes
+purrxy --stop               # Stop all
 ```
 
 ## Connecting Clients
@@ -122,7 +122,7 @@ curl -N http://127.0.0.1:5304/v1/messages \
 All requests go to one llama.cpp instance:
 
 ```bash
-lana-proxy --backend http://127.0.0.1:8080
+purrxy --backend http://127.0.0.1:8080
 ```
 
 ### Model Name Mapping
@@ -130,7 +130,7 @@ lana-proxy --backend http://127.0.0.1:8080
 Map Anthropic model names to backend model names:
 
 ```bash
-lana-proxy --model-map claude-3-opus=qwen2.5-coder claude-3-haiku=qwen3-coder
+purrxy --model-map claude-3-opus=qwen2.5-coder claude-3-haiku=qwen3-coder
 ```
 
 The proxy replaces the model name before forwarding. The original name is echoed back in the response.
@@ -140,7 +140,7 @@ The proxy replaces the model name before forwarding. The original name is echoed
 Route different models to different llama.cpp instances:
 
 ```bash
-lana-proxy \
+purrxy \
   --route qwen2.5=http://localhost:8080 \
   --route qwen3=http://localhost:8081
 ```
@@ -171,7 +171,7 @@ curl -s http://127.0.0.1:5304/admin/config | python3 -m json.tool
 llama.cpp typically handles one request at a time. The proxy queues excess requests:
 
 ```bash
-lana-proxy --max-concurrent 1 --queue-timeout 120
+purrxy --max-concurrent 1 --queue-timeout 120
 ```
 
 - `--max-concurrent 1` — Only 1 request forwarded to backend at a time (default)
@@ -185,10 +185,10 @@ Cache identical non-streaming requests to avoid redundant inference:
 
 ```bash
 # In-memory only
-lana-proxy --cache --cache-ttl 300 --cache-max-size 100
+purrxy --cache --cache-ttl 300 --cache-max-size 100
 
 # With disk persistence (survives restarts)
-lana-proxy --cache --cache-dir ~/.config/lana-proxy/cache
+purrxy --cache --cache-dir ~/.config/purrxy/cache
 ```
 
 Cache key is a hash of: model + system prompt + messages + tools. Only non-streaming responses are cached.
@@ -202,7 +202,7 @@ Useful during development when you're iterating on prompts and hitting the same 
 Save every request/response pair for debugging or offline testing:
 
 ```bash
-lana-proxy --record ./sessions/debug.jsonl
+purrxy --record ./sessions/debug.jsonl
 ```
 
 Each line in the JSONL file contains:
@@ -222,7 +222,7 @@ Each line in the JSONL file contains:
 Serve recorded responses without a running backend:
 
 ```bash
-lana-proxy --replay ./sessions/debug.jsonl
+purrxy --replay ./sessions/debug.jsonl
 ```
 
 Requests are matched by hashing the messages content. Streaming responses are replayed with realistic timing delays.
@@ -237,7 +237,7 @@ Use cases:
 Limit total token consumption per session:
 
 ```bash
-lana-proxy --token-budget 100000
+purrxy --token-budget 100000
 ```
 
 When the budget is exhausted, new requests are rejected with HTTP 429:
@@ -266,7 +266,7 @@ curl -X POST http://127.0.0.1:5304/admin/budget/reset
 Log structured analytics for every request:
 
 ```bash
-lana-proxy --analytics ~/.config/lana-proxy/analytics/session.jsonl
+purrxy --analytics ~/.config/purrxy/analytics/session.jsonl
 ```
 
 Each entry:
@@ -310,15 +310,15 @@ All admin endpoints are localhost-only.
 A typical production-like setup:
 
 ```bash
-lana-proxy \
+purrxy \
   --port 5304 \
   --backend http://127.0.0.1:8080 \
   --model-map claude-3-opus=qwen2.5 claude-3-haiku=qwen2.5 \
   --max-concurrent 1 \
   --cache \
   --cache-ttl 600 \
-  --cache-dir ~/.config/lana-proxy/cache \
-  --analytics ~/.config/lana-proxy/analytics/$(date +%Y%m%d).jsonl \
+  --cache-dir ~/.config/purrxy/cache \
+  --analytics ~/.config/purrxy/analytics/$(date +%Y%m%d).jsonl \
   --token-budget 500000 \
   --dashboard \
   --log-level INFO

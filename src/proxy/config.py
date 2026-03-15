@@ -1,5 +1,5 @@
 """
-Configuration management for lana-proxy.
+Configuration management for purrxy.
 
 Loads settings from CLI arguments, environment variables, and defaults.
 Precedence: CLI args > environment variables > defaults.
@@ -39,12 +39,12 @@ class Config:
     def from_env(cls) -> "Config":
         """Create config populated from environment variables."""
         return cls(
-            host=os.environ.get("LANA_PROXY_HOST", cls.host),
-            port=int(os.environ.get("LANA_PROXY_PORT", cls.port)),
-            backend_url=os.environ.get("LANA_PROXY_BACKEND", cls.backend_url),
-            log_level=os.environ.get("LANA_PROXY_LOG_LEVEL", cls.log_level),
+            host=os.environ.get("PURRXY_HOST", cls.host),
+            port=int(os.environ.get("PURRXY_PORT", cls.port)),
+            backend_url=os.environ.get("PURRXY_BACKEND", cls.backend_url),
+            log_level=os.environ.get("PURRXY_LOG_LEVEL", cls.log_level),
             request_timeout=int(
-                os.environ.get("LANA_PROXY_TIMEOUT", cls.request_timeout)
+                os.environ.get("PURRXY_TIMEOUT", cls.request_timeout)
             ),
         )
 

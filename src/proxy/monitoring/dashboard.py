@@ -1,5 +1,5 @@
 """
-Live terminal dashboard for lana-proxy.
+Live terminal dashboard for purrxy.
 
 Displays real-time statistics using ANSI escape codes (no curses, no
 external dependencies). Runs in a background daemon thread, refreshing
@@ -92,7 +92,7 @@ class Dashboard:
 
         # Header
         lines.append("\033[1;36m" + "=" * 60 + "\033[0m")
-        lines.append("\033[1;36m  LANA PROXY — Live Dashboard\033[0m")
+        lines.append("\033[1;36m  Purrxy — Live Dashboard\033[0m")
         lines.append("\033[1;36m" + "=" * 60 + "\033[0m")
         lines.append("")
 

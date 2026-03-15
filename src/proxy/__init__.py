@@ -1,5 +1,5 @@
 """
-lana-proxy: Anthropic Messages API translation proxy and provider gateway.
+purrxy: Anthropic Messages API translation proxy and provider gateway.
 
 Subpackages:
     translation     Anthropic <-> OpenAI format conversion.

@@ -1,6 +1,6 @@
-"""Anthropic SDK compatibility tests for lana-proxy.
+"""Anthropic SDK compatibility tests for purrxy.
 
-These tests verify that lana-proxy correctly handles the exact HTTP requests
+These tests verify that purrxy correctly handles the exact HTTP requests
 sent by the Anthropic Python SDK and returns responses in the exact format
 the SDK expects to parse.
 
@@ -8,7 +8,7 @@ Tests that require a running proxy + backend server are decorated with
 @unittest.skipUnless and will skip gracefully when the server isn't running.
 
 To run with a live server:
-    1. Start everything:   lana-proxy --start
+    1. Start everything:   purrxy --start
     2. Run tests:          python3 -m unittest tests.test_sdk_compat -v
 """
 
@@ -31,7 +31,7 @@ PROXY_BASE = "http://{}:{}".format(PROXY_HOST, PROXY_PORT)
 
 
 def _proxy_is_running():
-    """Check if lana-proxy is running and reachable."""
+    """Check if purrxy is running and reachable."""
     try:
         req = urllib.request.Request(
             "{}/health".format(PROXY_BASE),
@@ -486,7 +486,7 @@ class TestSDKHeaderAcceptance(unittest.TestCase):
 
 # ── Live Server Tests (skip when server not running) ─────────────────────────
 
-@unittest.skipUnless(PROXY_AVAILABLE, "lana-proxy not running on port 5304")
+@unittest.skipUnless(PROXY_AVAILABLE, "purrxy not running on port 5304")
 class TestLiveSDKHeaders(unittest.TestCase):
     """Test that a running proxy accepts Anthropic SDK headers."""
 

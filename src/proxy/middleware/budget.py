@@ -1,5 +1,5 @@
 """
-Token counting and budget tracking for lana-proxy.
+Token counting and budget tracking for purrxy.
 
 Tracks cumulative token usage per session (input + output) and enforces
 an optional maximum token budget. When the budget is exceeded, new

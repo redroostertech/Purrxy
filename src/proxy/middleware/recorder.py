@@ -1,5 +1,5 @@
 """
-Request/response recording and replay for lana-proxy.
+Request/response recording and replay for purrxy.
 
 Provides two modes:
 - Record: saves every request/response pair to a JSONL file for later replay.
