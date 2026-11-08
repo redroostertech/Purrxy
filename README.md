@@ -41,6 +41,127 @@ LANA_USE_PROXY=true lana-code
 **Requests:** Anthropic Messages format -> OpenAI Chat Completions format
 **Responses:** OpenAI format -> Anthropic format (streaming and non-streaming)
 
+## Provider Gateway
+
+Since 1.1.0 the proxy is also a provider gateway. The hub format is OpenAI
+Chat Completions: every inbound dialect is converted to the hub, and the hub
+is converted to whatever the selected upstream speaks.
+
+```
+ Inbound dialects                 Hub                       Upstream dialects
+ ----------------                 ---                       -----------------
+ Anthropic client                                           openai     (passthrough)
+   POST /v1/messages  --+                              +-->   OpenAI, Gemini, Perplexity, Groq,
+                        |                              |      Together, Mistral, OpenRouter,
+                        +--> OpenAI Chat Completions --+      DeepSeek, xAI, Azure, custom,
+ OpenAI client          |    (lana-proxy :5304)        |      llama.cpp, vLLM
+   POST /v1/chat/     --+                              +-->  anthropic  (translated)
+        completions                                           Anthropic Messages API
+   GET  /v1/models
+
+ Responses and SSE streams are translated back along the same path.
+```
+
+The LANA backend (Node, OpenAI Chat Completions) calls the proxy on loopback
+and picks a provider per request with headers. Without these headers the
+configured backend routing (`--backend`, `--route`) applies exactly as before.
+
+| Header | Required | Meaning |
+|---|---|---|
+| `X-Lana-Upstream-Provider` | yes | Preset id from the table below |
+| `X-Lana-Upstream-Url` | for `custom` and `azure_openai` | API base URL override (the part before `/chat/completions` or `/messages`); a query string is preserved |
+| `X-Lana-Upstream-Key` | yes (optional for `custom`) | Provider API key, sent upstream in the preset's auth style |
+
+```bash
+curl -s http://127.0.0.1:5304/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "X-Lana-Upstream-Provider: anthropic" \
+  -H "X-Lana-Upstream-Key: $ANTHROPIC_API_KEY" \
+  -d '{"model": "claude-sonnet-4-5", "messages": [{"role": "user", "content": "Hello"}]}'
+```
+
+### Presets
+
+| id | Base URL | Dialect | Auth | Notes |
+|---|---|---|---|---|
+| `openai` | `https://api.openai.com/v1` | openai | Bearer | |
+| `anthropic` | `https://api.anthropic.com/v1` | anthropic | `x-api-key` + `anthropic-version: 2023-06-01` | Native Messages API, translated |
+| `gemini` | `https://generativelanguage.googleapis.com/v1beta/openai` | openai | Bearer | Google's OpenAI-compatible endpoint; a native `generateContent` adapter can come later |
+| `perplexity` | `https://api.perplexity.ai` | openai | Bearer | `citations` and `search_results` pass through unchanged; no tools, no `/models` |
+| `groq` | `https://api.groq.com/openai/v1` | openai | Bearer | |
+| `together` | `https://api.together.xyz/v1` | openai | Bearer | |
+| `mistral` | `https://api.mistral.ai/v1` | openai | Bearer | |
+| `openrouter` | `https://openrouter.ai/api/v1` | openai | Bearer | Capabilities vary by routed model |
+| `deepseek` | `https://api.deepseek.com/v1` | openai | Bearer | |
+| `xai` | `https://api.x.ai/v1` | openai | Bearer | |
+| `azure_openai` | (URL required) | openai | `api-key` header | e.g. `https://RESOURCE.openai.azure.com/openai/deployments/DEPLOYMENT?api-version=2024-10-21`; no `/models` |
+| `custom` | (URL required) | openai | Bearer (key optional) | Any OpenAI-compatible server (vLLM, llama.cpp, Fireworks); private addresses allowed |
+
+The registry lives in `src/proxy/providers.py` (capability flags: tools,
+streaming, vision, models).
+
+### What gets translated for `anthropic` upstreams
+
+| OpenAI (hub) | Anthropic |
+|---|---|
+| `system` / `developer` messages (anywhere) | top-level `system` (joined) |
+| `max_tokens` / `max_completion_tokens` | `max_tokens` (defaults to 4096; Anthropic requires it) |
+| `temperature` (0 to 2) | `temperature` (clamped to 0 to 1) |
+| `stop` | `stop_sequences` |
+| `user` | `metadata.user_id` |
+| `tools[].function.parameters` | `tools[].input_schema` |
+| `tool_choice` auto / none / required / named | `auto` / `none` / `any` / `tool` |
+| `parallel_tool_calls: false` | `tool_choice.disable_parallel_tool_use` |
+| assistant `tool_calls` | `tool_use` blocks |
+| `role: "tool"` messages | `tool_result` blocks in one user turn (consecutive turns merged) |
+| `image_url` data URI / https URL | `image` block, base64 / url source |
+| `finish_reason` stop / length / tool_calls / content_filter | `stop_reason` end_turn, stop_sequence / max_tokens / tool_use / refusal |
+| `usage.prompt_tokens` | `input_tokens + cache_creation_input_tokens + cache_read_input_tokens` |
+
+Streaming: Anthropic `message_start`, `content_block_*` (`text_delta`,
+`input_json_delta`), `message_delta`, `message_stop`, `ping` and `error`
+events become `chat.completion.chunk` lines with incremental `tool_calls`
+deltas, a final `finish_reason` chunk, a usage chunk when
+`stream_options.include_usage` is set, then `data: [DONE]`. A mid-stream
+upstream error becomes a `data: {"error": {...}}` line followed by `[DONE]`.
+
+Not translated: `response_format`, `logprobs`, `seed`, `n > 1`, audio
+(logged and ignored); Anthropic `thinking` blocks are dropped from responses.
+`/v1/messages` with gateway headers goes Anthropic to hub to upstream, so an
+Anthropic client reaching the `anthropic` preset is translated twice rather
+than passed through.
+
+### Security
+
+- The key is held only for the duration of one request. It is never stored,
+  logged, written to the recorder or analytics files, used as a cache key, or
+  echoed in errors; upstream error text is scrubbed of the key before it is
+  logged or returned.
+- `X-Lana-*` headers are never forwarded. Outgoing headers are built from
+  scratch; nothing from the client request is copied.
+- Upstream URLs must use `https`, except loopback hosts (`127.0.0.1`,
+  `localhost`, `::1`). URLs with embedded credentials are refused. For every
+  preset except `custom`, private, link-local, unspecified, multicast and
+  reserved IP literals are refused (including IPv4-mapped IPv6 and legacy
+  integer forms). Hostnames are not DNS-resolved.
+- Upstream redirects are not followed, so a key can never be replayed to a
+  different host.
+- Gateway requests bypass the prompt cache, replay and the request queue
+  (the queue protects the local backend), so responses never cross
+  upstreams or tenants.
+- The bind default stays `127.0.0.1`. Keep it there: the gateway is meant to
+  be called on loopback by the LANA backend.
+
+### Errors
+
+Errors come back in the inbound dialect's shape: an OpenAI error object
+(`{"error": {"message", "type", "param", "code"}}`) for `/v1/chat/completions`
+and `/v1/models`, the Anthropic envelope for `/v1/messages`. Upstream statuses
+map as follows: 400, 401, 403, 404, 409, 413, 429 pass through; 422 becomes
+400; 408 and 504 become 504; 503 and 529 become 503; other 5xx, redirects and
+unreachable upstreams become 502. Invalid or missing gateway headers return
+400.
+
 ## Installation
 
 ```bash
@@ -225,6 +346,8 @@ curl -X POST http://127.0.0.1:5304/admin/reload \
 | Method | Path | Description |
 |---|---|---|
 | `POST` | `/v1/messages` | Anthropic Messages API (main endpoint) |
+| `POST` | `/v1/chat/completions` | OpenAI Chat Completions API (gateway and config backend) |
+| `GET` | `/v1/models` | Model listing from the selected upstream or the config backend |
 | `GET` | `/health` | Health check |
 | `GET` | `/admin/config` | Current configuration |
 | `POST` | `/admin/reload` | Hot-swap configuration |
@@ -286,12 +409,18 @@ src/
   proxy/                               Proxy core
     config.py                          Runtime configuration
     server.py                          Threaded HTTP server + routing
-    errors.py                          Anthropic error envelope formatting
+    errors.py                          Anthropic and OpenAI error formatting
+    providers.py                       Provider presets, auth, URL validation, upstream selection
+    gateway.py                         Upstream client (hub request -> any provider)
 
     translation/                       API format conversion
       request.py                       Anthropic -> OpenAI
       response.py                      OpenAI -> Anthropic (non-streaming)
       stream.py                        OpenAI SSE -> Anthropic SSE
+      openai_to_anthropic/             Reverse direction (hub -> Anthropic upstream)
+        request.py                     OpenAI -> Anthropic
+        response.py                    Anthropic -> OpenAI (non-streaming)
+        stream.py                      Anthropic SSE -> OpenAI SSE
 
     middleware/                         Optional features
       cache.py                         LRU prompt cache + disk persistence
@@ -305,7 +434,7 @@ src/
       dashboard.py                     Live ANSI terminal UI
       discovery.py                     Backend model auto-discovery
 
-tests/                                 106 tests
+tests/                                 212 tests
 ```
 
 `src/process/` is fully generic — reusable in any Python 3.9+ project for process management with zero dependencies. Translation modules are pure functions. All subsystems are thread-safe and independently testable.
@@ -354,7 +483,7 @@ Features:
 ## Testing
 
 ```bash
-# Run all tests (106 total)
+# Run all tests (212 total)
 python3 -m unittest discover tests/ -v
 
 # Individual test modules
@@ -364,6 +493,9 @@ python3 -m unittest tests.test_translate_stream -v
 python3 -m unittest tests.test_config -v
 python3 -m unittest tests.test_sdk_compat -v
 python3 -m unittest tests.test_supervisor -v
+python3 -m unittest tests.test_providers -v
+python3 -m unittest tests.test_translate_openai_to_anthropic -v
+python3 -m unittest tests.test_gateway_server -v
 ```
 
 ### Manual Testing

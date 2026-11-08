@@ -6,6 +6,9 @@ Modules:
     response    OpenAI response -> Anthropic response (non-streaming).
     stream      OpenAI SSE -> Anthropic SSE (streaming state machine).
 
+Reverse direction (OpenAI hub -> Anthropic upstream) lives in the
+openai_to_anthropic subpackage with the same request/response/stream layout.
+
 All translation functions are pure — no side effects, no shared state.
 """
 
