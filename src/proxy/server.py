@@ -87,10 +87,11 @@ class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
         super().__init__((config.host, config.port), ProxyRequestHandler)
 
     def shutdown_server(self):
-        """Clean shutdown: save cache to disk if configured."""
+        """Clean up after serve_forever() has returned: save the cache to disk
+        if configured, then close the listening socket."""
         if self.cache is not None:
             self.cache.save_to_disk()
-        self.shutdown()
+        self.server_close()
 
 
 class ProxyRequestHandler(BaseHTTPRequestHandler):

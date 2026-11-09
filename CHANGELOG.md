@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- SIGTERM and SIGINT now stop the proxy. The signal handler called `server.shutdown()` on the same thread that runs `serve_forever()`, so it waited forever; `lana-proxy --stop` and any service manager always ended up force killing it, and the prompt cache was never saved on exit. The handler now asks for shutdown from another thread and the main thread saves the cache and closes the socket once the loop ends (`tests/test_shutdown.py`).
+
 ## [1.1.0] - 2026-11-08
 
 ### Added

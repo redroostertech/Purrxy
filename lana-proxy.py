@@ -29,6 +29,7 @@ import logging
 import os
 import signal
 import sys
+import threading
 
 __version__ = open(os.path.join(os.path.dirname(__file__), "VERSION")).read().strip()
 
@@ -640,17 +641,16 @@ def main():
         dashboard = Dashboard(stats)
         dashboard.start()
 
-    # Graceful shutdown on SIGINT/SIGTERM
-    def shutdown(signum, frame):
+    # Graceful shutdown on SIGINT/SIGTERM. The handler runs on the main thread,
+    # which is inside serve_forever(); server.shutdown() waits for
+    # serve_forever() to return, so calling it here would wait forever. Ask
+    # from another thread and let the main thread clean up below.
+    def request_stop(signum, frame):
         logger.info("Shutting down...")
-        if dashboard is not None:
-            dashboard.stop()
-        server.shutdown_server()
-        server.server_close()
-        sys.exit(0)
+        threading.Thread(target=server.shutdown, daemon=True).start()
 
-    signal.signal(signal.SIGINT, shutdown)
-    signal.signal(signal.SIGTERM, shutdown)
+    signal.signal(signal.SIGINT, request_stop)
+    signal.signal(signal.SIGTERM, request_stop)
 
     logger.info("lana-proxy starting on %s:%d", config.host, config.port)
     logger.info("Backend: %s", config.backend_url)
@@ -674,12 +674,10 @@ def main():
 
     try:
         server.serve_forever()
-    except KeyboardInterrupt:
-        logger.info("Interrupted, shutting down...")
+    finally:
         if dashboard is not None:
             dashboard.stop()
         server.shutdown_server()
-        server.server_close()
 
 
 if __name__ == "__main__":
